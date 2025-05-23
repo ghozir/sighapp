@@ -4,10 +4,9 @@ import (
 	"time"
 
 	env "github.com/ghozir/sighapp/config"
-	authcontract "github.com/ghozir/sighapp/contracts"
 	"github.com/ghozir/sighapp/entities"
-	"github.com/ghozir/sighapp/features/auth/dto"
-	"github.com/ghozir/sighapp/features/auth/presenter"
+	authdto "github.com/ghozir/sighapp/features/auth/dto"
+	authpresenter "github.com/ghozir/sighapp/features/auth/presenter"
 	"github.com/ghozir/sighapp/utils"
 	"github.com/ghozir/sighapp/utils/exception"
 	"github.com/ghozir/sighapp/utils/logger"
@@ -16,18 +15,18 @@ import (
 )
 
 type Service interface {
-	LoginUser(c *fiber.Ctx, req dto.LoginRequest) (*presenter.LoginResult, error)
+	LoginUser(c *fiber.Ctx, req authdto.LoginRequest) (*authpresenter.LoginResult, error)
 }
 
 type authService struct {
-	repo authcontract.Repository
+	repo Repository
 }
 
-func NewAuthService(repo authcontract.Repository) Service {
+func NewAuthService(repo Repository) Service {
 	return &authService{repo: repo}
 }
 
-func (s *authService) LoginUser(c *fiber.Ctx, req dto.LoginRequest) (*presenter.LoginResult, error) {
+func (s *authService) LoginUser(c *fiber.Ctx, req authdto.LoginRequest) (*authpresenter.LoginResult, error) {
 	user, err := s.repo.FindUserByEmail(req.Email)
 	if err != nil {
 		logger.Error("User not found", err)
@@ -35,7 +34,7 @@ func (s *authService) LoginUser(c *fiber.Ctx, req dto.LoginRequest) (*presenter.
 	}
 
 	if err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
-		logger.Error("Wrong Password", err)
+		logger.Error("Wrong password", err)
 		return nil, exception.Unauthorized("wrong password")
 	}
 
@@ -55,13 +54,10 @@ func (s *authService) LoginUser(c *fiber.Ctx, req dto.LoginRequest) (*presenter.
 		UpdatedAt: time.Now(),
 	}
 
-	_, err = s.repo.InsertOneSession(session)
-	if err != nil {
+	if _, err := s.repo.InsertOneSession(session); err != nil {
 		logger.Error("Failed to insert session", err)
 		return nil, exception.InternalServerError("failed to insert session")
 	}
 
-	return &presenter.LoginResult{
-		Token: token,
-	}, nil
+	return &authpresenter.LoginResult{Token: token}, nil
 }

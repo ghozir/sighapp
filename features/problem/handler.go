@@ -1,16 +1,16 @@
-package auth
+package problem
 
 import (
-	authdto "github.com/ghozir/sighapp/features/auth/dto"
+	problemdto "github.com/ghozir/sighapp/features/problem/dto"
 	"github.com/ghozir/sighapp/utils"
 	"github.com/ghozir/sighapp/utils/exception"
 	"github.com/ghozir/sighapp/utils/response"
 	"github.com/gofiber/fiber/v2"
 )
 
-func LoginHandler(service Service) fiber.Handler {
+func InsertProblemData(service Service) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		var req authdto.LoginRequest
+		var req problemdto.InsertProblemRequest
 
 		if err := c.BodyParser(&req); err != nil {
 			return exception.BadRequest("invalid request body")
@@ -20,17 +20,11 @@ func LoginHandler(service Service) fiber.Handler {
 			return exception.UnprocessableEntityWithData("validation failed", errs)
 		}
 
-		result, err := service.LoginUser(c, req)
+		result, err := service.InsertProblem(c, req)
 		if err != nil {
 			return err
 		}
 
 		return response.OK(c, "Login success", "LOGIN_SUCCESS", result)
-	}
-}
-
-func GetToken(service Service) fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		return response.OK(c, "Login success", "LOGIN_SUCCESS", c.Locals("user"))
 	}
 }

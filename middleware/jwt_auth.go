@@ -3,7 +3,7 @@ package middleware
 import (
 	"strings"
 
-	authcontract "github.com/ghozir/sighapp/contracts"
+	"github.com/ghozir/sighapp/features/auth"
 	"github.com/ghozir/sighapp/utils"
 	"github.com/ghozir/sighapp/utils/exception"
 	"github.com/gofiber/fiber/v2"
@@ -11,8 +11,17 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func JWTAuth(repo authcontract.Repository) fiber.Handler {
+var whiteList = map[string]bool{
+	"/":               true,
+	"/auth/login":     true,
+	"/problem/anonim": true,
+}
+
+func JWTAuth(repo auth.Repository) fiber.Handler {
 	return func(c *fiber.Ctx) error {
+		if whiteList[c.Path()] {
+			return BasicAuth()(c)
+		}
 		authHeader := c.Get("Authorization")
 		if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
 			return exception.BadRequest("Missing or invalid token")
