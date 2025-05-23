@@ -15,7 +15,7 @@ func main() {
 	env.ConfigInit()
 	mongodb.ConnectMongo()
 	app := fiber.New()
-	app.Use(middleware.ErrorMiddleware())
+	app.Use(middleware.ErrorHandler())
 
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("SighApp is alive!")

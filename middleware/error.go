@@ -5,7 +5,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func ErrorMiddleware() fiber.Handler {
+func ErrorHandler() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		err := c.Next()
 		if err != nil {
